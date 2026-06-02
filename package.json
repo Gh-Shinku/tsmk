@@ -1,0 +1,13 @@
+{
+	"scripts": {
+		"tsmk": "tsx src/cli.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^25.5.0",
+		"tsx": "^4.21.0"
+	},
+	"dependencies": {
+		"cac": "^7.0.0",
+		"remark": "^15.0.1"
+	}
+}
