@@ -3,12 +3,6 @@ import path from "node:path";
 import { cac } from "cac";
 import { stripHeadingNumbers, shiftHeadingLevel } from "./transform";
 
-type Options = {
-  input?: string;
-  output?: string;
-  offset?: string;
-};
-
 async function readAndWrite(
   inputPath: string,
   outputPath: string,
@@ -24,60 +18,42 @@ async function readAndWrite(
 const cli = cac("tsmk");
 
 cli
-  .command("strip [input] [output]", "Strip numbering prefixes from headings")
-  .option("-i, --input <path>", "Input file")
-  .option("-O, --output <path>", "Output file")
-  .action(
-    async (inputArg?: string, outputArg?: string, options?: Options) => {
-      try {
-        const inputPath = options?.input ?? inputArg;
-        const outputPath = options?.output ?? outputArg;
-        if (!inputPath || !outputPath) {
-          throw new Error("Please provide input and output file paths.");
-        }
-        await readAndWrite(inputPath, outputPath, stripHeadingNumbers);
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : String(error);
-        console.error(message);
-        cli.outputHelp();
-        process.exitCode = 1;
-      }
-    },
-  );
+  .command("strip <input> <output>", "Strip numbering prefixes from headings")
+  .action(async (inputPath: string, outputPath: string) => {
+    try {
+      await readAndWrite(inputPath, outputPath, stripHeadingNumbers);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      console.error(message);
+      cli.outputHelp();
+      process.exitCode = 1;
+    }
+  });
 
 cli
-  .command("shift [input] [output]", "Shift heading levels up or down")
-  .option("-i, --input <path>", "Input file")
-  .option("-O, --output <path>", "Output file")
+  .command("shift <input> <output>", "Shift heading levels up or down")
   .option("-o, --offset <offset>", "Shift offset (required)")
-  .action(
-    async (inputArg?: string, outputArg?: string, options?: Options) => {
-      try {
-        const inputPath = options?.input ?? inputArg;
-        const outputPath = options?.output ?? outputArg;
-        if (!inputPath || !outputPath) {
-          throw new Error("Please provide input and output file paths.");
-        }
-        if (options?.offset == null) {
-          throw new Error("Option --offset is required.");
-        }
-        const offset = Number(options.offset);
-        if (!Number.isInteger(offset)) {
-          throw new Error("Offset must be an integer.");
-        }
-        await readAndWrite(inputPath, outputPath, (md) =>
-          shiftHeadingLevel(md, offset),
-        );
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : String(error);
-        console.error(message);
-        cli.outputHelp();
-        process.exitCode = 1;
+  .action(async (inputPath: string, outputPath: string, options: { offset?: string }) => {
+    try {
+      if (options?.offset == null) {
+        throw new Error("Option --offset is required.");
       }
-    },
-  );
+      const offset = Number(options.offset);
+      if (!Number.isInteger(offset)) {
+        throw new Error("Offset must be an integer.");
+      }
+      await readAndWrite(inputPath, outputPath, (md) =>
+        shiftHeadingLevel(md, offset),
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      console.error(message);
+      cli.outputHelp();
+      process.exitCode = 1;
+    }
+  });
 
 cli.help();
 cli.parse();
