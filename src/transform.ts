@@ -63,13 +63,14 @@ function _stripHeadingNumbers() {
       if (node.type !== "heading" || !node.children) {
         continue;
       }
-      for (const child of node.children) {
-        if (child.type === "text" && typeof child.value === "string") {
-          const removeLength = getHeadingPrefixLength(child.value);
+      for (const descendant of walk(node)) {
+        if (descendant === node) continue;
+        if (descendant.type === "text" && typeof descendant.value === "string") {
+          const removeLength = getHeadingPrefixLength(descendant.value);
           if (removeLength > 0) {
-            child.value = child.value.slice(removeLength);
+            descendant.value = descendant.value.slice(removeLength);
           }
-          break;
+          return;
         }
       }
     }
