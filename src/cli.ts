@@ -6,6 +6,7 @@ import { stripHeadingNumbers, shiftHeadingLevel } from "./transform";
 type Options = {
   input?: string;
   output?: string;
+  offset?: string;
 };
 
 async function readAndWrite(
@@ -25,7 +26,7 @@ const cli = cac("tsmk");
 cli
   .command("strip [input] [output]", "Strip numbering prefixes from headings")
   .option("-i, --input <path>", "Input file")
-  .option("-o, --output <path>", "Output file")
+  .option("-O, --output <path>", "Output file")
   .action(
     async (inputArg?: string, outputArg?: string, options?: Options) => {
       try {
@@ -46,29 +47,24 @@ cli
   );
 
 cli
-  .command(
-    "shift <offset> [input] [output]",
-    "Shift heading levels up or down",
-  )
+  .command("shift [input] [output]", "Shift heading levels up or down")
   .option("-i, --input <path>", "Input file")
-  .option("-o, --output <path>", "Output file")
+  .option("-O, --output <path>", "Output file")
+  .option("-o, --offset <offset>", "Shift offset (required)")
   .action(
-    async (
-      offsetArg: string,
-      inputArg?: string,
-      outputArg?: string,
-      options?: Options,
-    ) => {
+    async (inputArg?: string, outputArg?: string, options?: Options) => {
       try {
-        const offset = Number(offsetArg);
-        if (!Number.isInteger(offset)) {
-          throw new Error("Offset must be an integer.");
-        }
-
         const inputPath = options?.input ?? inputArg;
         const outputPath = options?.output ?? outputArg;
         if (!inputPath || !outputPath) {
           throw new Error("Please provide input and output file paths.");
+        }
+        if (options?.offset == null) {
+          throw new Error("Option --offset is required.");
+        }
+        const offset = Number(options.offset);
+        if (!Number.isInteger(offset)) {
+          throw new Error("Offset must be an integer.");
         }
         await readAndWrite(inputPath, outputPath, (md) =>
           shiftHeadingLevel(md, offset),
